@@ -13,7 +13,6 @@ import { BenchPlayers } from "./components/BenchPlayers";
 import { ConfigDialog } from "./components/ConfigDialog";
 
 export default function PlayerTimeTracker() {
-  // Use useState for initial mounting
   const [isMounted, setIsMounted] = useState(false);
 
   const [config, setConfig] = useLocalStorage<Config>(CONFIG_KEY, {
@@ -31,6 +30,23 @@ export default function PlayerTimeTracker() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Add time update effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (isRunning) {
+      interval = setInterval(() => {
+        updatePlayerTimes(1); // Update every second
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isRunning, updatePlayerTimes]);
 
   const handleReset = () => {
     resetTimer();
@@ -70,9 +86,17 @@ export default function PlayerTimeTracker() {
         </div>
       </div>
 
-      <ActivePlayers players={players} onBench={togglePlayerActive} />
+      <ActivePlayers
+        players={players}
+        onBench={togglePlayerActive}
+        gameTime={gameTime}
+      />
 
-      <BenchPlayers players={players} onActivate={togglePlayerActive} />
+      <BenchPlayers
+        players={players}
+        onActivate={togglePlayerActive}
+        gameTime={gameTime}
+      />
     </div>
   );
 }

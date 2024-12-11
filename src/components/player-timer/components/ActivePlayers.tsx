@@ -2,15 +2,20 @@
 
 import { Button } from "@/components/ui/button";
 import { Player } from "../utils/types";
-import { formatTime } from "../utils/formatters";
+import { formatTime, calculatePercentage } from "../utils/formatters";
 import { MAX_ACTIVE_PLAYERS } from "../utils/constants";
 
 interface ActivePlayersProps {
   players: Player[];
   onBench: (id: number) => void;
+  gameTime: number; // Add gameTime prop
 }
 
-export function ActivePlayers({ players, onBench }: ActivePlayersProps) {
+export function ActivePlayers({
+  players,
+  onBench,
+  gameTime,
+}: ActivePlayersProps) {
   const activePlayers = players.filter((p) => p.enabled && p.isActive);
 
   return (
@@ -41,6 +46,9 @@ export function ActivePlayers({ players, onBench }: ActivePlayersProps) {
               <div className="flex items-center">
                 <span>Total: {formatTime(player.totalActiveTime)}</span>
               </div>
+            </div>
+            <div className="text-gray-600">
+              {calculatePercentage(player.totalActiveTime, gameTime)}%
             </div>
           </div>
         </div>

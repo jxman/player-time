@@ -17,7 +17,7 @@ import { formatTime } from "../utils/formatters";
 interface GameControlsProps {
   isRunning: boolean;
   gameTime: number;
-  onToggleRunning: () => void;
+  onToggleRunning: (shouldRun: boolean) => void;
   onReset: () => void;
 }
 
@@ -27,6 +27,10 @@ export function GameControls({
   onToggleRunning,
   onReset,
 }: GameControlsProps) {
+  const handleToggle = () => {
+    onToggleRunning(!isRunning);
+  };
+
   return (
     <div className="flex items-center gap-4">
       <div className="flex items-center text-gray-600 text-sm">
@@ -34,7 +38,7 @@ export function GameControls({
       </div>
       <div className="flex gap-2">
         <Button
-          onClick={onToggleRunning}
+          onClick={handleToggle}
           variant={isRunning ? "destructive" : "default"}
           size="icon"
           className="h-8 w-8"

@@ -1,6 +1,7 @@
+// src/components/player-timer/hooks/usePlayerManager.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Player } from "../utils/types";
 import { MAX_PLAYERS, MAX_ACTIVE_PLAYERS } from "../utils/constants";
 
@@ -17,6 +18,29 @@ export function usePlayerManager(initialNames: string[]) {
         enabled: i < MAX_PLAYERS,
       }))
   );
+
+  const lastUpdateRef = useRef(Date.now());
+
+  const updatePlayerTimes = () => {
+    const now = Date.now();
+    const elapsedSeconds = Math.floor((now - lastUpdateRef.current) / 1000);
+
+    if (elapsedSeconds >= 1) {
+      setPlayers((currentPlayers) =>
+        currentPlayers.map((player) => {
+          if (player.isActive) {
+            return {
+              ...player,
+              totalActiveTime: player.totalActiveTime + elapsedSeconds,
+              currentActiveTime: player.currentActiveTime + elapsedSeconds,
+            };
+          }
+          return player;
+        })
+      );
+      lastUpdateRef.current = now;
+    }
+  };
 
   const togglePlayerActive = (id: number) => {
     setPlayers((currentPlayers) => {
@@ -37,21 +61,6 @@ export function usePlayerManager(initialNames: string[]) {
           : p
       );
     });
-  };
-
-  const updatePlayerTimes = (elapsedSeconds: number) => {
-    setPlayers((currentPlayers) =>
-      currentPlayers.map((player) => {
-        if (player.isActive) {
-          return {
-            ...player,
-            totalActiveTime: player.totalActiveTime + elapsedSeconds,
-            currentActiveTime: player.currentActiveTime + elapsedSeconds,
-          };
-        }
-        return player;
-      })
-    );
   };
 
   return {

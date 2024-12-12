@@ -14,6 +14,7 @@ import { ConfigDialog } from "./components/ConfigDialog";
 export default function PlayerTimeTracker() {
   const [isMounted, setIsMounted] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
+  const MAX_TIME_UPDATE = 30; // Maximum seconds to update at once
 
   const [config, setConfig] = useLocalStorage<Config>(CONFIG_KEY, {
     activePlayers: MAX_PLAYERS,
@@ -63,7 +64,15 @@ export default function PlayerTimeTracker() {
     let frameId: number;
     const updateTimes = () => {
       const now = Date.now();
-      const elapsed = Math.floor((now - lastUpdate) / 1000);
+      let elapsed = Math.floor((now - lastUpdate) / 1000);
+
+      // Protect against large time jumps
+      if (elapsed > MAX_TIME_UPDATE) {
+        console.log(
+          `Large time jump detected: ${elapsed}s, limiting to ${MAX_TIME_UPDATE}s`
+        );
+        elapsed = MAX_TIME_UPDATE;
+      }
 
       if (elapsed >= 1) {
         setLastUpdate(now);
@@ -95,8 +104,24 @@ export default function PlayerTimeTracker() {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && isRunning) {
-        setLastUpdate(Date.now());
+      if (document.hidden) {
+        // Store the time when going to background
+        localStorage.setItem("lastBackgroundTime", Date.now().toString());
+      } else if (isRunning) {
+        const lastBackgroundTime = localStorage.getItem("lastBackgroundTime");
+        if (lastBackgroundTime) {
+          const now = Date.now();
+          const backgroundDuration = now - parseInt(lastBackgroundTime);
+
+          // If background time was too long, just reset the last update
+          if (backgroundDuration > MAX_TIME_UPDATE * 1000) {
+            console.log("Long background duration detected, resetting timer");
+            setLastUpdate(now);
+          } else {
+            // For shorter durations, update normally
+            setLastUpdate(parseInt(lastBackgroundTime));
+          }
+        }
       }
     };
 
